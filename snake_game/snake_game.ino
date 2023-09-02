@@ -3,11 +3,12 @@
   
   Jogo da cobrinha com contador de pontos
 
+  Baseado em: https://wokwi.com/projects/296135008348799496
   Autor: Fabio Souza
   Data: 30/08/2023
 */
 
-//mapeamento de pinos
+//mapeamento de pinos da Franzininho WiFi LAB01
 #define LED_VERMELHO 14   // Pino do LED Vermelho
 #define LED_VERDE 13      // Pino do LED Verde
 #define LED_AZUL 12       // Pino do LED Azul
@@ -31,24 +32,34 @@
 #define BT_A BOTAO_6      // Botão A - botão 6
 #define BT_B BOTAO_5      // Botão B - botão 5
 
+//bibliotecas para o display OLED
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
+//configurações do display OLED
 #define SCREEN_WIDTH        128 // Largura da tela OLED, em pixels
 #define SCREEN_HEIGHT        64 // altura da tela OLED, em pixels
-
 #define OLED_RESET            -1 // Pino de reset do display, -1 se não houver
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);  // Inicia Display OLED
 
+//vetor com os pinos dos botões
 const byte buttonPins[] = {BT_LEFT, BT_UP, BT_RIGHT, BT_DOWN}; // LEFT, UP, RIGHT, DOWN
 
+//configurações do jogo 
+#define SNAKE_PIECE_SIZE     3        // Tamanho de cada pedaço da cobra
+#define MAX_SANKE_LENGTH   165        // Tamanho máximo da cobra
+#define MAP_SIZE_X          35        // Tamanho do mapa em X
+#define MAP_SIZE_Y          20        // Tamanho do mapa em Y
+#define STARTING_SNAKE_SIZE  5        // Tamanho inicial da cobra
+#define SNAKE_MOVE_DELAY    30        // Tempo de movimento da cobra
+
+//enumerações para os estados do jogo e direções
 typedef enum {      // Estados do jogo
   START,            // Início
   RUNNING,          // Rodando
   GAMEOVER          // Game Over
 } State;            // Tipo de dado State
-
 typedef enum {      // Direções
     LEFT,           // Esquerda
     UP,             // Cima
@@ -56,25 +67,20 @@ typedef enum {      // Direções
     DOWN            // Baixo
 } Direction;        // Tipo de dado Direction
 
-#define SNAKE_PIECE_SIZE     3
-#define MAX_SANKE_LENGTH   165
-#define MAP_SIZE_X          35
-#define MAP_SIZE_Y          20
-#define STARTING_SNAKE_SIZE  5
-#define SNAKE_MOVE_DELAY    30
-
 State gameState;                  // Variável que guarda o estado atual do jogo
-
-int8_t snake[MAX_SANKE_LENGTH][2];  // Vetor que guarda as posições da cobra
-uint8_t snake_length;               // Tamanho da cobra
 Direction dir;                      // Direção atual da cobra
 Direction newDir;                   // Direção que a cobra irá seguir no próximo movimento
 
+int8_t snake[MAX_SANKE_LENGTH][2];  // Vetor que guarda as posições da cobra
+uint8_t snake_length;               // Tamanho da cobra
 int8_t fruit[2];                    // Posição da fruta
+int moveTime = 0;                   // Variável para contar o tempo de movimento da cobra
 
-int moveTime = 0;   // Variável para contar o tempo de movimento da cobra
 
-
+/*
+  Função setup - Executada apenas uma vez nio início
+  Responsável por configurar os pinos, o display e iniciar o jogo
+*/
 void setup() {
   Serial.begin(9600);                                 // Inicia a comunicação serial
 
@@ -84,13 +90,52 @@ void setup() {
   }
 
   for (byte i = 0; i < sizeof(buttonPins)/sizeof(buttonPins[0]); i++) { // Configura os pinos dos botões
-    pinMode(buttonPins[i], INPUT_PULLUP);                               // Habilita o resistor de pull-up interno
+    pinMode(buttonPins[i], INPUT_PULLUP);                               // Configura o pino como entrada com pullup interno ativado
   }
 
   pinMode(BUZZER, OUTPUT);                                              // Configura o pino do buzzer como saída
   randomSeed(analogRead(A0));                                           // Inicia o gerador de números aleatórios
   setupGame();                                                          // Inicia o jogo
 }
+
+void loop() {
+
+  switch(gameState) {                           // Verifica o estado atual do jogo
+    case START:                                 // Se for START
+      if(buttonPress()) gameState = RUNNING;    // Se algum botão for pressionado, muda o estado para RUNNING
+      break;
+    
+    case RUNNING:                               // Se for RUNNING
+      moveTime++;                               // Incrementa o tempo de movimento
+      readDirection();                          // Lê a direção
+      if(moveTime >= SNAKE_MOVE_DELAY) {        // Se o tempo de movimento for maior que o tempo de movimento da cobra
+        dir = newDir;                           // Muda a direção da cobra
+        display.clearDisplay();                 // Limpa o display
+        if(moveSnake()) {                       // Move a cobra, se houver colisão
+          gameState = GAMEOVER;                 // Muda o estado para GAMEOVER
+          drawGameover();                       // Desenha a mensagem de GAMEOVER
+          delay(1000);                          // Espera 1 segundo
+        }
+        else{
+        drawMap();                              // Desenha o mapa
+        drawScore();                            // Desenha a pontuação
+        }
+        display.display();                      // Mostra o que foi desenhado no display
+        checkFruit();                           // Verifica se a cobra comeu a fruta
+        moveTime = 0;                           // Reseta o tempo de movimento
+      }
+      break;
+    
+    case GAMEOVER:                              // Se for GAMEOVER
+      if(buttonPress()) {                       // Se algum botão for pressionado
+        delay(500);                             // Espera 500ms
+        setupGame();                            // Inicia o jogo
+      }
+      break;
+  }
+  delay(10);                                    // Espera 10ms
+}
+
 
 /*
 Função para configurar o jogo
@@ -117,43 +162,6 @@ void resetSnake() {
     snake[i][0] = MAP_SIZE_X / 2 - i;         // Inicia a posição X
     snake[i][1] = MAP_SIZE_Y / 2;             // Inicia a posição Y
   }
-}
-
-
-void loop() {
-
-  switch(gameState) {                           // Verifica o estado atual do jogo
-    case START:                                 // Se for START
-      if(buttonPress()) gameState = RUNNING;    // Se algum botão for pressionado, muda o estado para RUNNING
-      break;
-    
-    case RUNNING:                               // Se for RUNNING
-      moveTime++;                               // Incrementa o tempo de movimento
-      readDirection();                          // Lê a direção
-      if(moveTime >= SNAKE_MOVE_DELAY) {        // Se o tempo de movimento for maior que o tempo de movimento da cobra
-        dir = newDir;                           // Muda a direção da cobra
-        display.clearDisplay();                 // Limpa o display
-        if(moveSnake()) {                       // Move a cobra, se houver colisão
-          gameState = GAMEOVER;                 // Muda o estado para GAMEOVER
-          drawGameover();                       // Desenha a mensagem de GAMEOVER
-          delay(1000);                          // Espera 1 segundo
-        }
-        drawMap();                              // Desenha o mapa
-        drawScore();                            // Desenha a pontuação
-        display.display();                      // Mostra o que foi desenhado no display
-        checkFruit();                           // Verifica se a cobra comeu a fruta
-        moveTime = 0;                           // Reseta o tempo de movimento
-      }
-      break;
-    
-    case GAMEOVER:                              // Se for GAMEOVER
-      if(buttonPress()) {                       // Se algum botão for pressionado
-        delay(500);                             // Espera 500ms
-        setupGame();                            // Inicia o jogo
-      }
-      break;
-  }
-  delay(10);                                    // Espera 10ms
 }
 
 /*
@@ -301,6 +309,8 @@ void drawPressToStart() {
 Função para desenhar a mensagem de GAMEOVER
 */
 void drawGameover() {
+  display.setCursor(2,2);
+  display.println(snake_length - STARTING_SNAKE_SIZE);
   display.setTextSize(2);
   display.setTextColor(SSD1306_WHITE);
   display.setCursor(16,20);
