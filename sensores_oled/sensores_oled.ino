@@ -18,7 +18,7 @@
 #define BOTAO_5 3         // Pino do Botão 5
 #define BOTAO_6 2         // Pino do Botão 6
 #define BUZZER 17         // Pino do Buzzer
-#define DHT11 15          // Pino do DHT11
+#define DHT11_PIN 15          // Pino do DHT11
 #define LDR 1             // Pino do LDR
 #define OLED_SDA 8        // Pino SDA do OLED
 #define OLED_SCL 9        // Pino SCL do OLED
@@ -118,7 +118,7 @@ const unsigned char franzininho_logo_128x64 [] PROGMEM = {
 
 
 // Definição dos pinos dos sensores
-const int dhtPin = DHT11;  // Pino de conexão com o sensor DHT11
+const int dhtPin = DHT11_PIN;  // Pino de conexão com o sensor DHT11
 const int ldrPin = LDR;   // Pino do LDR
 
 DHT dht(dhtPin, DHT11);   // Cria o objeto dht
@@ -147,7 +147,7 @@ void loop() {
   float humidity = dht.readHumidity();       // Lê a umidade relativa do ar
   int lightLevel = analogRead(ldrPin);       // Lê o valor do LDR
 
-  display.clearDisplay()                      // Limpa a tela
+  display.clearDisplay();                      // Limpa a tela
   display.setTextSize(1);                     // Tamanho do texto
   display.setTextColor(WHITE);                // Cor do texto
   display.setCursor(0, 0);                    // Posição do cursor
