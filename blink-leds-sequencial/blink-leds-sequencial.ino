@@ -33,7 +33,7 @@ Data: 30/08/2023
 
 
 // Definindo os pinos dos LEDs
-const int ledPins[] = {LED_VERMELHO, LED_VERDE,LED_AZUL} // Pinos dos LEDs Vermelho, Verde e Azul
+const int ledPins[] = {LED_VERMELHO, LED_VERDE,LED_AZUL}; // Pinos dos LEDs Vermelho, Verde e Azul
 
 void setup() {
   // Configurando os pinos dos LEDs como saídas
