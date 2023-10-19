@@ -18,7 +18,7 @@
 #define BOTAO_5 3         // Pino do Botão 5
 #define BOTAO_6 2         // Pino do Botão 6
 #define BUZZER 17         // Pino do Buzzer
-#define DHT11 15          // Pino do DHT11
+#define DHT11_PIN 15          // Pino do DHT11
 #define LDR 1             // Pino do LDR
 #define OLED_SDA 8        // Pino SDA do OLED
 #define OLED_SCL 9        // Pino SCL do OLED
@@ -33,7 +33,7 @@
 
 #include <DHT.h>          // Biblioteca do sensor DHT11
 
-const int dhtPin = DHT11;    // Pino de conexão com o sensor DHT11
+const int dhtPin = DHT11_PIN;    // Pino de conexão com o sensor DHT11
 DHT dht(dhtPin, DHT11);     // Cria o objeto dht
 
 void setup() {
