@@ -322,7 +322,7 @@ void drawGameover() {
 Função para gerar um beep no buzzer
 */
 void beep(){
-  digitalWrite(BUZZER, HIGH);       // Liga o buzzer
+  tone(BUZZER, 440);       // Liga o buzzer
   delay(50);                        // Espera 50ms
-  digitalWrite(BUZZER, LOW);        // Desliga o buzzer 
+  noTone(BUZZER);        // Desliga o buzzer 
 }
