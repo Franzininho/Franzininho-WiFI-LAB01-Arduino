@@ -102,7 +102,11 @@ void loop() {
 
   switch(gameState) {                           // Verifica o estado atual do jogo
     case START:                                 // Se for START
-      if(buttonPress()) gameState = RUNNING;    // Se algum botão for pressionado, muda o estado para RUNNING
+      if(buttonPress()) 
+      {
+        gameState = RUNNING;    // Se algum botão for pressionado, muda o estado para RUNNING
+        initSound();
+      }
       break;
     
     case RUNNING:                               // Se for RUNNING
@@ -114,6 +118,7 @@ void loop() {
         if(moveSnake()) {                       // Move a cobra, se houver colisão
           gameState = GAMEOVER;                 // Muda o estado para GAMEOVER
           drawGameover();                       // Desenha a mensagem de GAMEOVER
+          gameoverSound();                      //som de game over
           delay(1000);                          // Espera 1 segundo
         }
         else{
@@ -239,7 +244,7 @@ void checkFruit() {
   {
     if(snake_length + 1 <= MAX_SANKE_LENGTH){               // Se o tamanho da cobra for menor que o tamanho máximo
       snake_length++;                                       // Incrementa o tamanho da cobra
-      beep();                                               // Beep
+      fruitSound();                                         // Som quando comer fruta
     }
     generateFruit();                                        // Gera uma nova fruta
   }
@@ -322,7 +327,31 @@ void drawGameover() {
 Função para gerar um beep no buzzer
 */
 void beep(){
-  tone(BUZZER, 440);       // Liga o buzzer
-  delay(50);                        // Espera 50ms
-  noTone(BUZZER);        // Desliga o buzzer 
+  tone(BUZZER, 440,50);       // Liga o buzzer por 50 ms
 }
+
+/*
+ * Função para gerar som inicial
+ */
+ void initSound()
+ {
+  tone(BUZZER, 280, 150);
+  tone(BUZZER, 250, 100);
+ }
+ 
+/*
+ * Função para gerar som de gameover* 
+ */
+ void gameoverSound(){
+  tone(BUZZER, 200, 300);
+  tone(BUZZER, 250, 200);
+  tone(BUZZER, 300, 300);
+ }
+
+/*
+ * Função para gerar som quando comer fruta
+ */
+ void fruitSound(){
+  tone(BUZZER,988,100);
+  tone(BUZZER,1319,200);
+ }
